@@ -15,11 +15,12 @@ class SpeechResModel(nn.Module):
 
         self.n_layers = n_layers
         if dilation:
-            self.convs = [nn.Conv2d(self.n_maps, self.n_maps, (3, 3), padding=int(2**(i // 3)), dilation=int(2**(i // 3)),
-                bias=False) for i in range(n_layers)]
+            self.convs = [nn.Conv2d(self.n_maps, self.n_maps, (3, 3),
+                                    padding=int(2**(i // 3)), dilation=int(2**(i // 3)),
+                                    bias=False) for i in range(n_layers)]
         else:
             self.convs = [nn.Conv2d(self.n_maps, self.n_maps, (3, 3), padding=1, dilation=1,
-                bias=False) for _ in range(n_layers)]
+                                    bias=False) for _ in range(n_layers)]
         for i, conv in enumerate(self.convs):
             self.add_module("bn{}".format(i + 1), nn.BatchNorm2d(self.n_maps, affine=False))
             self.add_module("conv{}".format(i + 1), conv)

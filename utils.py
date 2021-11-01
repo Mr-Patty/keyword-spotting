@@ -148,7 +148,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
 
             mean_loss = 0
             model.train()
-            for batch_x, batch_y in tqdm_notebook(train_loader):
+            for batch_x, batch_y in tqdm(train_loader):
                 optim.zero_grad()
                 batch_x = batch_x.float().to(device)
                 batch_y = batch_y.to(device)
@@ -166,7 +166,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             preds = []
             test_y = []
             mean_loss_val = 0
-            for batch_x, batch_y in tqdm_notebook(validation_loader):
+            for batch_x, batch_y in tqdm(validation_loader):
                 test_y.append(batch_y.numpy())
                 with torch.no_grad():
                     output = model(batch_x.float().to(device))
@@ -183,15 +183,9 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             scheduler.step(mean_loss_val)
             if epoch != 0 and epoch % each == 0 or (acc > max_acc and epoch > 10):
                 max_acc = max(acc, max_acc)
-
                 check_path = os.path.join(checkpoints_path, 'model_checpoint{}'.format(
                     datetime.now().strftime("_%Y%m%d_%H%M%S")) + '_{}'.format(epoch) + '.pt')
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optim.state_dict(),
-                    'loss': mean_loss,
-                }, check_path)
+                torch.save(model.state_dict(), check_path)
             iterator.set_postfix({'train_loss': mean_loss, 'valid_loss': mean_loss_val, 'valid_acc': acc})
             with open('logging.txt', 'a+') as file:
                 file.write('{} {} {}\n'.format(mean_loss, mean_loss_val, acc))
@@ -227,3 +221,7 @@ def testModel(model, test_samples, noise_path, labels_set, base_dir, max_samples
             preds.extend(pred)
 
     return test_y, preds
+
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
