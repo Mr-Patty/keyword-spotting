@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class SpeechResModel(nn.Module):
-    def __init__(self, n_labels, n_feature_maps=45, n_layers=26, dilation=True, res_pool=2):
+    def __init__(self, n_labels, n_feature_maps=45, n_layers=26, dilation=False, res_pool=2):
         super().__init__()
         self.n_labels = n_labels
         self.n_maps = n_feature_maps

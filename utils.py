@@ -61,10 +61,11 @@ class SpeechDataset(data.Dataset):
             torchaudio.transforms.SlidingWindowCmn(cmn_window=600, norm_vars=True, center=True)
         )
 
-        self.train_audio_transforms = nn.Sequential(
-            torchaudio.transforms.FrequencyMasking(freq_mask_param=3),
-            torchaudio.transforms.TimeMasking(time_mask_param=100)
-        )
+    #         self.train_audio_transforms = nn.Sequential(
+    #         #     torchaudio.transforms.SlidingWindowCmn(cmn_window=600, norm_vars=True, center=True),
+    #             torchaudio.transforms.FrequencyMasking(freq_mask_param=3),
+    #             torchaudio.transforms.TimeMasking(time_mask_param=100)
+    #         )
 
     def load_audio(self, example, silence=False):
         if silence:
@@ -99,8 +100,8 @@ class SpeechDataset(data.Dataset):
 
         torch_audio = torch.from_numpy(audio).float()
         transform_audio = self.audio_transforms(torch_audio).reshape(-1, self.n_mfcc)
-        if self.set_type == 'train':
-            transform_audio = self.train_audio_transforms(transform_audio)
+        #         if self.set_type == 'train':
+        #             transform_audio = self.train_audio_transforms(transform_audio)
         self._audio_cache[example] = transform_audio
         return transform_audio
 
