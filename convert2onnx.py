@@ -36,5 +36,5 @@ if __name__ == '__main__':
                       dynamic_axes={'input': {0: 'batch_size', 1: 'audio_length'},  # variable length axes
                                     'output': {0: 'batch_size', 1: 'audio_length'}})
 
-    onnx_model = onnx.load("spotting.onnx")
+    onnx_model = onnx.load("key-spotting.onnx")
     onnx.checker.check_model(onnx_model)
