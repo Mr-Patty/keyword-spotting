@@ -43,20 +43,16 @@ if __name__ == '__main__':
         list_samples = file.read()
     test_samples = list_samples.split('\n')[:-1]
 
-    # if model_type == 'torch':
-    #     model = SpeechResModel(n_labels=len(labels_set) + 2).float()
-    #     model.load_state_dict(torch.load(argv['checkpoint']))
-    #     model.eval()
-    # elif model_type == 'onnx':
-    #     onnx_model = onnx.load(argv['checkpoint'])
-    #     onnx.checker.check_model(onnx_model)
-    #     model = argv['checkpoint']
-    # else:
-    #     print('model type must be onnx or torch')
-
-    model = SpeechResModel(n_labels=len(labels_set) + 2).float()
-    model.load_state_dict(torch.load(argv['checkpoint']))
-    model.eval()
+    if model_type == 'torch':
+        model = SpeechResModel(n_labels=len(labels_set) + 2).float()
+        model.load_state_dict(torch.load(argv['checkpoint']))
+        model.eval()
+    elif model_type == 'onnx':
+        onnx_model = onnx.load(argv['checkpoint'])
+        onnx.checker.check_model(onnx_model)
+        model = argv['checkpoint']
+    else:
+        print('model type must be onnx or torch')
 
     test_y, preds = testModel(model, test_samples, noise_path, labels_set, base_dir, device=device,
                               batch_size=batch_size)
