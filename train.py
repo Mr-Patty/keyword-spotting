@@ -29,6 +29,7 @@ if __name__ == '__main__':
     all_samples = []
     base_dir = argv['path_dataset']
     validation_file_path = os.path.join(base_dir, argv['valid_file_name'])
+    test_file_path = os.path.join(base_dir, argv['test_file_name'])
     noise_path = os.path.join(base_dir, argv['noise_name'])
     checkpoints_path = argv['checkpoints']
     device = argv['device']
@@ -46,13 +47,17 @@ if __name__ == '__main__':
     labels_set = argv['labels_set']
 
     for word in listdir(base_dir):
-        if os.path.isdir(word) and word in labels_set:
-            for path in listdir(base_dir + word):
+        if os.path.isdir(os.path.join(base_dir, word)) and word in labels_set:
+            for path in listdir(os.path.join(base_dir, word)):
                 all_samples.append(os.path.join(word, path))
 
     with open(validation_file_path) as file:
         list_samples = file.read()
     validation_samples = list_samples.split('\n')[:-1]
+    
+    with open(test_file_path) as file:
+        list_samples = file.read()
+    test_samples = list_samples.split('\n')[:-1]
 
     train_samples = list(set(all_samples) - set(validation_samples) - set(test_samples))
 
