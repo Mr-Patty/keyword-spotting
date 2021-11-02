@@ -112,7 +112,7 @@ class SpeechDataset(data.Dataset):
 
 
 def trainModel(model, train_samples, validation_samples, checkpoints_path, noise_path, labels_set, base_dir, lr=1e-3,
-               EPOCHS=10, batch_size=64, device='cuda', each=10):
+               EPOCHS=10, batch_size=64, device='cuda', each=10, logging=False):
 
     model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr)
@@ -192,8 +192,9 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
                     'loss': mean_loss,
                 }, check_path)
             iterator.set_postfix({'train_loss': mean_loss, 'valid_loss': mean_loss_val, 'valid_acc': acc})
-            with open('logging.txt', 'a+') as file:
-                file.write('{} {} {} {}\n'.format(mean_loss, mean_loss_val, acc, epoch))
+            if logging:
+                with open('logging.txt', 'a+') as file:
+                    file.write('{} {} {} {}\n'.format(mean_loss, mean_loss_val, acc, epoch))
         except KeyboardInterrupt:
             PATH = os.path.join(checkpoints_path,
                                 'model_checpoint{}'.format(datetime.now().strftime("_%Y%m%d_%H%M%S")) + '_{}'.format(

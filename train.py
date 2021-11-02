@@ -15,6 +15,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_dataset', default='dataset/', help='Path to dataset')
     parser.add_argument('--noise_name', default='_background_noise_/', help='Name of noise data')
+    parser.add_argument('--test_file_name', default='testing_list.txt', help='Name of test file')
     parser.add_argument('--valid_file_name', default='validation_list.txt', help='Name of validation file')
     parser.add_argument('--labels_set', default=['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes'],
                         help='Set of labels')

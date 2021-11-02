@@ -16,13 +16,15 @@ bash preprocess.sh
 Скрипт для обучения и аргументы к нему. 
 Все скрипты можно запустить без аргументов, потому что у них прописаны аргументы по умолчанию.
 ```
-python train.py --path_dataset dataset/ --noise_name _background_noise_ --valid_file_name validation_list.txt --labels_set <set_of_labels> --checkpoints checkpoints --device cuda --batch_size 128 --epochs 30
+python train.py --path_dataset dataset/ --noise_name _background_noise_ --valid_file_name validation_list.txt --test_file_name validation_list.txt --labels_set <set_of_labels> --checkpoints checkpoints --device cuda --batch_size 128 --epochs 30
 ```
 path_dataset - путь до датасета speech commands
 
 noise_name - как называется папка с шумом (должна быть внутри датасета)
 
 valid_file_name - как называется файл с валидацией (должен быть внутри датасета)
+
+test_file_name - как называется файл с валидацией (должен быть внутри датасета)
 
 labels_set - Список слов(команд) которые будет целевыми, все остальные слова будут считать неизвестными. 
 По умолчанию этот список ['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes']
