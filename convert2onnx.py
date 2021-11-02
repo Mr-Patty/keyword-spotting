@@ -6,7 +6,7 @@ from model import SpeechResModel
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--checkpoint', default='models/key-spotting.pt', help='Path to saved checkpoint')
+    parser.add_argument('--checkpoint', default='models/model_v4.pt', help='Path to saved checkpoint')
     parser.add_argument('--labels_set', default=['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes'],
                         help='Set of labels')
     namespace = parser.parse_args()
