@@ -1,47 +1,8 @@
 import os
-#
-from os import listdir
-from tqdm import tqdm
-from tqdm.notebook import tqdm_notebook
-from datetime import datetime
-
-import IPython
-import soundfile as sf
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils.data as data
-from sklearn.metrics import classification_report
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import accuracy_score
-
-import collections
-import contextlib
-import sys
-import wave
-import json
-import pickle
-import random
-# import torchaudio
-
-import matplotlib.pyplot as plt
-import librosa
-#
 import argparse
-import torch
-import json
-import pickle
 
-import torch.utils.data as data_utils
-import soundfile as sf
-
-from models.vad_models import LSTMModel
-from datetime import datetime
 from utils import *
 from os import listdir
-from tqdm import tqdm
 from model import SpeechResModel
 
 # base_dir = "dataset/"

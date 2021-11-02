@@ -18,8 +18,6 @@ import torchaudio
 
 
 class SpeechDataset(data.Dataset):
-
-    #     LABEL_UNKNOWN = "__unknown__"
     def __init__(self, data, set_type, noise_path, labels_set, base_path, unknown_prob=0.1, silence_prob=0.1,
                  noise_prob=0.8, timeshift_ms=100, input_length=16000, n_mels=40, n_mfcc=40, hop_ms=10):
         super().__init__()
@@ -42,8 +40,6 @@ class SpeechDataset(data.Dataset):
         self.noise_prob = noise_prob
         self.input_length = input_length
         self.timeshift_ms = timeshift_ms
-        #         self._audio_cache = SimpleCache(config["cache_size"]) # todo
-        #         self._file_cache = SimpleCache(config["cache_size"])
         self._file_cache = {}
         self._audio_cache = {}
         n_unk = len(list(filter(lambda x: x == 1, self.audio_labels)))
@@ -60,12 +56,10 @@ class SpeechDataset(data.Dataset):
                                                                                     "center": True, 'n_mels': n_mels}),
             torchaudio.transforms.SlidingWindowCmn(cmn_window=600, norm_vars=True, center=True)
         )
-
-    #         self.train_audio_transforms = nn.Sequential(
-    #         #     torchaudio.transforms.SlidingWindowCmn(cmn_window=600, norm_vars=True, center=True),
-    #             torchaudio.transforms.FrequencyMasking(freq_mask_param=3),
-    #             torchaudio.transforms.TimeMasking(time_mask_param=100)
-    #         )
+        self.train_audio_augmentations = nn.Sequential(
+            torchaudio.transforms.FrequencyMasking(freq_mask_param=3),
+            torchaudio.transforms.TimeMasking(time_mask_param=10)
+        )
 
     def load_audio(self, example, silence=False):
         if silence:
@@ -95,13 +89,16 @@ class SpeechDataset(data.Dataset):
             audio = self.augment(samples=audio, sample_rate=16000)
 
         if random.random() < self.noise_prob or silence:
-            a = random.random() * 0.1
+            if silence:
+                a = random.random() * 0.4
+            else:
+                a = random.random() * 0.1
             audio = np.clip(a * bg_noise + audio, -1, 1)
 
         torch_audio = torch.from_numpy(audio).float()
         transform_audio = self.audio_transforms(torch_audio).reshape(-1, self.n_mfcc)
-        #         if self.set_type == 'train':
-        #             transform_audio = self.train_audio_transforms(transform_audio)
+        if self.set_type == 'train':
+            transform_audio = self.train_audio_augmentations(transform_audio)
         self._audio_cache[example] = transform_audio
         return transform_audio
 
@@ -115,7 +112,8 @@ class SpeechDataset(data.Dataset):
 
 
 def trainModel(model, train_samples, validation_samples, checkpoints_path, noise_path, labels_set, base_dir, lr=1e-3,
-               EPOCHS=10, batch_size=64, device='cuda', each=10, step_size=8):
+               EPOCHS=10, batch_size=64, device='cuda', each=10):
+
     model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr)
     loss_function = torch.nn.CrossEntropyLoss()
@@ -123,7 +121,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, factor=0.1, patience=2, threshold=0.01)
     last_epoch = -1
 
-    train_dataset = SpeechDataset(train_samples, 'train', noise_path, labels_set, base_dir)
+    train_dataset = SpeechDataset(train_samples, 'train', noise_path, labels_set, base_dir, n_mels=64)
     use_cuda = device == 'cuda'
     kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
@@ -132,7 +130,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
                                                batch_size=batch_size,
                                                shuffle=True, drop_last=True, **kwargs)
 
-    validation_dataset = SpeechDataset(validation_samples, 'test', noise_path, labels_set, base_dir)
+    validation_dataset = SpeechDataset(validation_samples, 'test', noise_path, labels_set, base_dir, n_mels=64)
     validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset,
                                                     batch_size=batch_size,
                                                     shuffle=False, **kwargs)
@@ -149,7 +147,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
 
             mean_loss = 0
             model.train()
-            for batch_x, batch_y in tqdm(train_loader):
+            for batch_x, batch_y in tqdm_notebook(train_loader):
                 optim.zero_grad()
                 batch_x = batch_x.float().to(device)
                 batch_y = batch_y.to(device)
@@ -167,7 +165,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             preds = []
             test_y = []
             mean_loss_val = 0
-            for batch_x, batch_y in tqdm(validation_loader):
+            for batch_x, batch_y in tqdm_notebook(validation_loader):
                 test_y.append(batch_y.numpy())
                 with torch.no_grad():
                     output = model(batch_x.float().to(device))
@@ -184,12 +182,18 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             scheduler.step(mean_loss_val)
             if epoch != 0 and epoch % each == 0 or (acc > max_acc and epoch > 10):
                 max_acc = max(acc, max_acc)
+
                 check_path = os.path.join(checkpoints_path, 'model_checpoint{}'.format(
                     datetime.now().strftime("_%Y%m%d_%H%M%S")) + '_{}'.format(epoch) + '.pt')
-                torch.save(model.state_dict(), check_path)
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optim.state_dict(),
+                    'loss': mean_loss,
+                }, check_path)
             iterator.set_postfix({'train_loss': mean_loss, 'valid_loss': mean_loss_val, 'valid_acc': acc})
             with open('logging.txt', 'a+') as file:
-                file.write('{} {} {}\n'.format(mean_loss, mean_loss_val, acc))
+                file.write('{} {} {} {}\n'.format(mean_loss, mean_loss_val, acc, epoch))
         except KeyboardInterrupt:
             PATH = os.path.join(checkpoints_path,
                                 'model_checpoint{}'.format(datetime.now().strftime("_%Y%m%d_%H%M%S")) + '_{}'.format(
@@ -198,29 +202,35 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             return
 
 
-def testModel(model, test_samples, noise_path, labels_set, base_dir, max_samples=10000, batch_size=1, device='cpu'):
-    model.to(device)
+def testModel(model, test_samples, noise_path, labels_set, base_dir, max_samples=10000, batch_size=1, device='cpu',
+              n_mels=40, model_type='torch'):
 
-    test_dataset = SpeechDataset(test_samples, 'test', noise_path, labels_set, base_dir)
 
-    use_cuda = device == 'cuda'
-    kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
+    test_dataset = SpeechDataset(test_samples, 'test', noise_path, labels_set, base_dir, n_mels=n_mels)
+
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                               batch_size=batch_size,
-                                              shuffle=False, **kwargs)
-
-    print('DATASET SIZE: {}'.format(len(test_dataset)))
-
-    model.eval()
+                                              shuffle=False)
     preds = []
     test_y = []
-    for x, y in tqdm(test_loader):
-        test_y.append(y.numpy())
-        with torch.no_grad():
-            output = model(x.float().to(device))
-            pred = output.cpu().detach().numpy()
+    print('DATASET SIZE: {}'.format(len(test_dataset)))
+    if model_type == 'torch':
+        model.to(device)
+        model.eval()
+        for x, y in tqdm(test_loader):
+            with torch.no_grad():
+                test_y.append(y.numpy())
+                output = model(x.float().to(device))
+                pred = output.cpu().detach().numpy()
+                preds.extend(pred)
+    elif model_type == 'onnx':
+        for x, y in tqdm(test_loader):
+            test_y.append(y.numpy())
+            ort_inputs = {model.get_inputs()[0].name: to_numpy(x)}
+            ort_outs = model.run(None, ort_inputs)
+            pred = ort_outs[0]
             preds.extend(pred)
-
+    del test_dataset
     return test_y, preds
 
 
