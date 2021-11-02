@@ -147,7 +147,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
 
             mean_loss = 0
             model.train()
-            for batch_x, batch_y in tqdm_notebook(train_loader):
+            for batch_x, batch_y in tqdm(train_loader):
                 optim.zero_grad()
                 batch_x = batch_x.float().to(device)
                 batch_y = batch_y.to(device)
@@ -165,7 +165,7 @@ def trainModel(model, train_samples, validation_samples, checkpoints_path, noise
             preds = []
             test_y = []
             mean_loss_val = 0
-            for batch_x, batch_y in tqdm_notebook(validation_loader):
+            for batch_x, batch_y in tqdm(validation_loader):
                 test_y.append(batch_y.numpy())
                 with torch.no_grad():
                     output = model(batch_x.float().to(device))

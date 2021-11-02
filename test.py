@@ -8,7 +8,6 @@ import numpy as np
 import torch.utils.data as data_utils
 
 from sklearn.metrics import classification_report
-from models.vad_models import LSTMModel
 from tqdm import tqdm
 from utils import *
 from model import SpeechResModel
@@ -34,7 +33,6 @@ if __name__ == '__main__':
     base_dir = argv['path_dataset']
     test_file_path = os.path.join(base_dir, argv['test_file_name'])
     noise_path = os.path.join(base_dir, argv['noise_name'])
-    checkpoints_path = argv['checkpoints']
     device = argv['device']
     batch_size = int(argv['batch_size'])
     labels_set = argv['labels_set']
@@ -44,7 +42,7 @@ if __name__ == '__main__':
     test_samples = list_samples.split('\n')[:-1]
 
     if model_type == 'torch':
-        model = SpeechResModel(n_labels=len(labels_set) + 2, dilation=True).float()
+        model = SpeechResModel(n_labels=len(labels_set)+2, dilation=True).float()
         model.load_state_dict(torch.load(argv['checkpoint']))
         model.eval()
     elif model_type == 'onnx':
