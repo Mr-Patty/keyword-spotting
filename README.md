@@ -10,3 +10,5 @@
 <!-- ### [Файл с предсказаниями for_devs](https://github.com/Mr-Patty/Voice-Activity-Detection/blob/main/pred_for_devs.csv) -->
 
 ### [Метрики и тестирование](https://github.com/Mr-Patty/keyword-spotting/blob/master/notebooks/Testing.ipynb) в ноутбуке для наглядности
+
+Чекпоинты обученных моделей лежат здесь models/

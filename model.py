@@ -41,6 +41,6 @@ class SpeechResModel(nn.Module):
                 x = y
             if i > 0:
                 x = getattr(self, "bn{}".format(i))(x)
-        x = x.view(x.size(0), x.size(1), -1) # shape: (batch, feats, o3)
+        x = x.view(x.size(0), x.size(1), -1)
         x = torch.mean(x, 2)
         return self.output(x)
